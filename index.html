@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en" class="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DocuLearn AI - File Management & Study Workspace</title>
+    
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#f0f7ff',
+                            100: '#e0effe',
+                            500: '#2563eb',
+                            600: '#1d4ed8',
+                            700: '#1e40af'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <!-- External Libraries -->
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- PDF.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <!-- Mammoth.js for DOCX -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
+
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body class="bg-gray-50 text-gray-900 dark:bg-gray-900 dark:text-gray-100 transition-colors duration-200">
+
+    <div class="flex h-screen overflow-hidden">
+        
+        <!-- Sidebar -->
+        <aside id="sidebar" class="w-64 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 flex flex-col z-20 transition-all duration-300">
+            <!-- Logo / Brand -->
+            <div class="p-5 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
+                <div class="flex items-center space-x-3">
+                    <div class="p-2 bg-brand-500 text-white rounded-lg">
+                        <i data-lucide="book-open-check" class="w-6 h-6"></i>
+                    </div>
+                    <div>
+                        <h1 class="font-bold text-lg tracking-tight leading-none">DocuLearn AI</h1>
+                        <span class="text-xs text-gray-500 dark:text-gray-400">Study Workspace</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Navigation Links -->
+            <nav class="flex-1 p-4 space-y-1 overflow-y-auto">
+                <a href="#" onclick="switchTab('dashboard')" class="nav-btn flex items-center space-x-3 px-3 py-2.5 rounded-lg text-sm font-medium bg-brand-50 text-brand-600 dark:bg-brand-900/30 dark:text-brand-400" id="nav-dashboard">
+                    <i data-lucide="layout-dashboard" class="w-5 h-5"></i>
+                    <span>Dashboard</span>
+                </a>
+                <a href="#" onclick="switchTab('files')" class="nav-btn flex items-center space-x-3 px-3 py-2.5 rounded-lg text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700" id="nav-files">
+                    <i data-lucide="folder-closed" class="w-5 h-5"></i>
+                    <span>My Documents</span>
+                </a>
+                <a href="#" onclick="switchTab('calendar')" class="nav-btn flex items-center space-x-3 px-3 py-2.5 rounded-lg text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700" id="nav-calendar">
+                    <i data-lucide="calendar" class="w-5 h-5"></i>
+                    <span>Deadlines & Schedule</span>
+                </a>
+                <a href="#" onclick="switchTab('ai-lab')" class="nav-btn flex items-center space-x-3 px-3 py-2.5 rounded-lg text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700" id="nav-ai-lab">
+                    <i data-lucide="sparkles" class="w-5 h-5"></i>
+                    <span>AI Learning Studio</span>
+                </a>
+            </nav>
+
+            <!-- Bottom Controls -->
+            <div class="p-4 border-t border-gray-200 dark:border-gray-700 space-y-2">
+                <button onclick="toggleDarkMode()" class="w-full flex items-center justify-between px-3 py-2 rounded-lg text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700">
+                    <span class="flex items-center space-x-2">
+                        <i data-lucide="moon" class="w-4 h-4 dark:hidden"></i>
+                        <i data-lucide="sun" class="w-4 h-4 hidden dark:block"></i>
+                        <span id="theme-label">Dark Mode</span>
+                    </span>
+                </button>
+            </div>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="flex-1 flex flex-col overflow-y-auto">
+            
+            <!-- Header -->
+            <header class="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-6 py-4 flex items-center justify-between sticky top-0 z-10">
+                <div class="flex items-center space-x-4">
+                    <h2 id="page-title" class="text-xl font-bold">Dashboard</h2>
+                </div>
+                <div class="flex items-center space-x-3">
+                    <button onclick="openModal('api-key-modal')" class="px-3 py-2 text-xs font-semibold bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 rounded-lg flex items-center space-x-2">
+                        <i data-lucide="key" class="w-4 h-4 text-brand-500"></i>
+                        <span>API Key Settings</span>
+                    </button>
+                    <button onclick="openModal('upload-modal')" class="px-4 py-2 bg-brand-500 hover:bg-brand-600 text-white font-medium text-sm rounded-lg flex items-center space-x-2 shadow-sm">
+                        <i data-lucide="upload-cloud" class="w-4 h-4"></i>
+                        <span>Upload File</span>
+                    </button>
+                </div>
+            </header>
+
+            <!-- Dynamic Body View -->
+            <div id="app-view" class="p-6 space-y-6">
+                <!-- Dashboard Content Rendered via JS -->
+            </div>
+        </main>
+    </div>
+
+    <!-- Upload Modal -->
+    <div id="upload-modal" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-xl max-w-md w-full p-6 space-y-4">
+            <div class="flex justify-between items-center">
+                <h3 class="font-bold text-lg">Upload Document</h3>
+                <button onclick="closeModal('upload-modal')" class="text-gray-400 hover:text-gray-600"><i data-lucide="x" class="w-5 h-5"></i></button>
+            </div>
+            
+            <div id="drop-zone" class="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-8 text-center cursor-pointer hover:border-brand-500 transition-colors">
+                <i data-lucide="file-up" class="w-10 h-10 text-gray-400 mx-auto mb-2"></i>
+                <p class="text-sm font-medium">Click or drag & drop file here</p>
+                <p class="text-xs text-gray-400 mt-1">Supports PDF, DOCX, TXT</p>
+                <input type="file" id="file-input" class="hidden" accept=".pdf,.docx,.txt">
+            </div>
+
+            <div class="space-y-3">
+                <div>
+                    <label class="block text-xs font-semibold mb-1">Associate Subject/Course</label>
+                    <input type="text" id="file-subject" placeholder="e.g. Computer Science" class="w-full px-3 py-2 text-sm border rounded-lg dark:bg-gray-700 dark:border-gray-600">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold mb-1">Set Reading Deadline (Optional)</label>
+                    <input type="date" id="file-deadline" class="w-full px-3 py-2 text-sm border rounded-lg dark:bg-gray-700 dark:border-gray-600">
+                </div>
+            </div>
+
+            <button onclick="handleFileUploadSubmit()" class="w-full py-2.5 bg-brand-500 hover:bg-brand-600 text-white rounded-lg font-medium text-sm">Upload & Process</button>
+        </div>
+    </div>
+
+    <!-- API Key Modal -->
+    <div id="api-key-modal" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-xl max-w-md w-full p-6 space-y-4">
+            <div class="flex justify-between items-center">
+                <h3 class="font-bold text-lg">Gemini API Key Setup</h3>
+                <button onclick="closeModal('api-key-modal')" class="text-gray-400 hover:text-gray-600"><i data-lucide="x" class="w-5 h-5"></i></button>
+            </div>
+            <p class="text-xs text-gray-500 dark:text-gray-400">Provide your Google Gemini API Key to enable live AI summaries, quiz generation, and chat tools.</p>
+            <input type="password" id="api-key-input" placeholder="AIzaSy..." class="w-full px-3 py-2 text-sm border rounded-lg dark:bg-gray-700 dark:border-gray-600">
+            <button onclick="saveApiKey()" class="w-full py-2 bg-brand-500 hover:bg-brand-600 text-white rounded-lg font-medium text-sm">Save Key</button>
+        </div>
+    </div>
+
+    <!-- Custom Scripts -->
+    <script src="js/file-handler.js"></script>
+    <script src="js/ai-engine.js"></script>
+    <script src="js/calendar.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>
